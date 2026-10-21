@@ -236,6 +236,11 @@ providers:
           cache_read_price: 0.30
 
   # MiniMax global endpoints: https://platform.minimax.io/docs
+  # Lower offer priority wins: global Chat, China Chat, then Anthropic.
+  # Explicit provider/model references bypass these example priorities.
+  # M3 pricing is intentionally unconfigured: standard rates double above 512k
+  # request input tokens. This flat-price schema cannot represent the tier.
+  # A zero M3 cost in local statistics is not a provider billing estimate.
   minimax-global-anthropic:
     protocol: "anthropic"
     base_url: "https://api.minimax.io/anthropic"
@@ -244,15 +249,13 @@ providers:
     user_agent: "moonbridge/1.0"
     offers:
       - model: MiniMax-M3.1-Flash
+        priority: 20
         pricing:
           input_price: 0.15
           output_price: 0.6
           cache_read_price: 0.015
       - model: MiniMax-M3
-        pricing:
-          input_price: 0.3
-          output_price: 1.2
-          cache_read_price: 0.06
+        priority: 20
 
   minimax-global-openai:
     protocol: "openai-chat"
@@ -261,15 +264,13 @@ providers:
     user_agent: "moonbridge/1.0"
     offers:
       - model: MiniMax-M3.1-Flash
+        priority: 0
         pricing:
           input_price: 0.15
           output_price: 0.6
           cache_read_price: 0.015
       - model: MiniMax-M3
-        pricing:
-          input_price: 0.3
-          output_price: 1.2
-          cache_read_price: 0.06
+        priority: 0
 
   # MiniMax China endpoints: https://platform.minimaxi.com/docs
   minimax-cn-anthropic:
@@ -280,15 +281,13 @@ providers:
     user_agent: "moonbridge/1.0"
     offers:
       - model: MiniMax-M3.1-Flash
+        priority: 30
         pricing:
           input_price: 0.15
           output_price: 0.6
           cache_read_price: 0.015
       - model: MiniMax-M3
-        pricing:
-          input_price: 0.3
-          output_price: 1.2
-          cache_read_price: 0.06
+        priority: 30
 
   minimax-cn-openai:
     protocol: "openai-chat"
@@ -297,15 +296,13 @@ providers:
     user_agent: "moonbridge/1.0"
     offers:
       - model: MiniMax-M3.1-Flash
+        priority: 10
         pricing:
           input_price: 0.15
           output_price: 0.6
           cache_read_price: 0.015
       - model: MiniMax-M3
-        pricing:
-          input_price: 0.3
-          output_price: 1.2
-          cache_read_price: 0.06
+        priority: 10
 
   # Google Gemini (Vertex AI via GenAI SDK)
   # gemini:
@@ -326,6 +323,12 @@ providers:
 # add friendly fallback names like "moonbridge".
 # Backward-compatible shorthand: <route>: "provider/upstream-model"
 routes:
+  # MiniMax ordinary text default. Select "minimax" explicitly or set
+  # defaults.model to "minimax" for a MiniMax-only installation.
+  # Use minimax-cn-openai here to keep requests in the China region.
+  minimax:
+    model: MiniMax-M3.1-Flash
+    provider: minimax-global-openai
   moonbridge:
     model: deepseek-v4-pro
     provider: deepseek

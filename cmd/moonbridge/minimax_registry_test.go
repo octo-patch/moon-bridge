@@ -63,6 +63,9 @@ func TestExampleConfigIncludesMiniMaxFlashFirstRegistry(t *testing.T) {
 			if got := provider.Offers[1].Model; got != "MiniMax-M3" {
 				t.Fatalf("second offer = %q, want MiniMax-M3", got)
 			}
+			if !provider.Offers[1].Pricing.IsZero() {
+				t.Fatal("M3 must not advertise a flat price for tiered billing")
+			}
 		})
 	}
 
@@ -97,7 +100,7 @@ func TestMiniMaxModelMetadata(t *testing.T) {
 		reasoning     []string
 	}{
 		{"MiniMax-M3.1-Flash", 1000000, []string{"text", "image", "video"}, []string{"low", "medium", "high", "xhigh", "max"}},
-		{"MiniMax-M3", 1000000, []string{"text", "image", "video"}, []string{"adaptive", "disabled"}},
+		{"MiniMax-M3", 1000000, []string{"text", "image", "video"}, []string{}},
 	}
 
 	for _, tt := range tests {
