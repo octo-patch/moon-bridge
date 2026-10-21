@@ -42,6 +42,22 @@ describe("OverviewPage", () => {
     restoreURLMethods();
   });
 
+  test("shows unknown rather than zero when pricing is unavailable", async () => {
+    const data = usageStats();
+    data.totals.total_cost = null;
+    data.totals.cost_unknown = true;
+    data.by_model[0].cost = null;
+    data.by_model[0].avg_cost_per_mtoken = null;
+    vi.spyOn(management, "getUsageStats").mockResolvedValue(data);
+    vi.spyOn(logs, "getRecentLogs").mockResolvedValue([]);
+    vi.spyOn(logs, "createLogStream").mockResolvedValue(new Response(new ReadableStream<Uint8Array>()));
+    renderWithConsoleProviders(<OverviewPage />);
+    await screen.findAllByText("unknown");
+    expect(within(metricCard("Total cost")).getByText("unknown")).toBeInTheDocument();
+    expect(screen.getAllByText("unknown").length).toBeGreaterThanOrEqual(3);
+    expect(screen.queryByText("¥0.00")).not.toBeInTheDocument();
+  });
+
   test("renders a usage dashboard with model charts and bottom logs instead of runtime status panels", async () => {
     vi.spyOn(configGraph, "getConfigGraph").mockResolvedValue(
       configGraphFixture({

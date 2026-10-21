@@ -11,6 +11,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 	"moonbridge/internal/config"
+	"moonbridge/internal/extension/plugin"
 	"moonbridge/internal/format"
 	"moonbridge/internal/protocol/anthropic"
 	"moonbridge/internal/protocol/cache"
@@ -18,6 +19,7 @@ import (
 	"moonbridge/internal/protocol/openai"
 	"moonbridge/internal/service/provider"
 	"moonbridge/internal/service/runtime"
+	"moonbridge/internal/service/stats"
 )
 
 // Exercise the example YAML through the production loader, provider manager,
@@ -38,6 +40,13 @@ func TestMiniMaxFlashConfiguredHTTPAndSSE(t *testing.T) {
 			{"legacy-explicit", "minimax-global-openai/MiniMax-M2.7", "", "minimax-global-openai", "MiniMax-M2.7", "", ""},
 			{"custom-saved-route", "saved", "", "minimax-cn-openai", "custom-model", "", ""},
 			{"non-minimax", "anthropic/claude-sonnet-4-20250514", "", "anthropic", "claude-sonnet-4-20250514", "", ""},
+			{"invalid-flash-effort", "minimax", `"effort":"invalid"`, "", "", "", ""},
+			{"invalid-flash-thinking", "minimax", `"type":"disabled"`, "", "", "", ""},
+			{"invalid-anthropic-effort", "minimax-global-anthropic/MiniMax-M3.1-Flash", `"effort":"invalid"`, "", "", "", ""},
+			{"invalid-m3-thinking", "MiniMax-M3", `"type":"enabled"`, "", "", "", ""},
+			{"invalid-m3-effort", "MiniMax-M3", `"effort":"high"`, "", "", "", ""},
+			{"invalid-numeric-effort", "minimax", `"effort":42`, "", "", "", ""},
+			{"invalid-numeric-type", "minimax-global-anthropic/MiniMax-M3", `"type":42`, "", "", "", ""},
 		} {
 			t.Run(fmt.Sprintf("%s/stream=%t", tt.name, stream), func(t *testing.T) {
 				var got map[string]any
@@ -127,7 +136,9 @@ func TestMiniMaxFlashConfiguredHTTPAndSSE(t *testing.T) {
 				}
 				rt := runtime.NewRuntime(cfg, pm, provider.BuildPricingFromConfig(config.ProviderFromGlobalConfig(&cfg)))
 				sc := config.ServerFromGlobalConfig(&cfg)
-				s := New(Config{ServerCfg: sc, AppConfig: sc, ProviderMgr: pm, Runtime: rt, AdapterRegistry: registry})
+				sessionStats := stats.NewSessionStats()
+				sessionStats.SetPricing(provider.BuildPricingFromConfig(config.ProviderFromGlobalConfig(&cfg)))
+				s := New(Config{ServerCfg: sc, AppConfig: sc, ProviderMgr: pm, Runtime: rt, AdapterRegistry: registry, Stats: sessionStats, PluginRegistry: plugin.NewRegistry(nil)})
 				body := map[string]any{"input": "hello", "stream": stream}
 				if tt.model != "" {
 					body["model"] = tt.model
@@ -146,8 +157,23 @@ func TestMiniMaxFlashConfiguredHTTPAndSSE(t *testing.T) {
 				request := httptest.NewRequest(http.MethodPost, "/v1/responses", strings.NewReader(string(raw)))
 				response := httptest.NewRecorder()
 				s.handleResponses(response, request)
+				if strings.HasPrefix(tt.name, "invalid-") {
+					if response.Code != http.StatusBadRequest || !strings.Contains(response.Body.String(), `"type":"invalid_request_error"`) || !strings.Contains(response.Body.String(), `"code":"invalid_reasoning"`) {
+						t.Fatalf("invalid input response %d: %s", response.Code, response.Body.String())
+					}
+					if got != nil || gotPath != "" {
+						t.Fatalf("invalid reasoning reached upstream: %s %v", gotPath, got)
+					}
+					return
+				}
 				if response.Code != http.StatusOK || !strings.Contains(response.Body.String(), "ok") {
 					t.Fatalf("response %d: %s", response.Code, response.Body.String())
+				}
+				if !stream && (tt.wireModel == "MiniMax-M3" || tt.wireModel == "MiniMax-M3.1-Flash") {
+					summary := sessionStats.Summary()
+					if summary.Requests != 1 || summary.UnpricedRequests != 1 || summary.CostValue() != nil {
+						t.Fatalf("real server request did not retain unknown pricing: %+v", summary)
+					}
 				}
 				def := cfg.ProviderDefs[tt.provider]
 				wantPath := "/" + tt.provider + "/anthropic/v1/messages"

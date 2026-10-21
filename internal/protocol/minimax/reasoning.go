@@ -7,6 +7,14 @@ import (
 	"moonbridge/internal/format"
 )
 
+// InvalidControlError identifies invalid client reasoning input before inference.
+type InvalidControlError struct{ Message string }
+
+func (e *InvalidControlError) Error() string { return e.Message }
+func invalidControl(message string, args ...any) error {
+	return &InvalidControlError{Message: fmt.Sprintf(message, args...)}
+}
+
 // Reasoning returns wire thinking.type and effort for the exact supported models.
 // Other models retain their existing adapter behavior. Native Core controls take
 // precedence over Responses extensions. M3 thinking modes are not effort levels.
@@ -16,6 +24,13 @@ func Reasoning(req *format.CoreRequest, defaultThinking string) (thinking, effor
 	}
 	openai, _ := req.Extensions["openai"].(map[string]any)
 	reasoning, _ := openai["reasoning"].(map[string]any)
+	for _, key := range []string{"effort", "type"} {
+		if value, exists := reasoning[key]; exists {
+			if _, ok := value.(string); !ok {
+				return "", "", invalidControl("MiniMax reasoning %s must be a string", key)
+			}
+		}
+	}
 	effort, _ = reasoning["effort"].(string)
 	thinking, _ = reasoning["type"].(string)
 	if req.Output != nil {
@@ -25,6 +40,9 @@ func Reasoning(req *format.CoreRequest, defaultThinking string) (thinking, effor
 		thinking = req.Thinking.Type
 	}
 	if req.Model == "MiniMax-M3" {
+		if effort != "" && effort != "adaptive" && effort != "disabled" {
+			return "", "", invalidControl("MiniMax-M3 accepts thinking type adaptive or disabled, not reasoning effort %q", effort)
+		}
 		// Accept previously advertised presets without sending them as effort.
 		if thinking == "" && (effort == "adaptive" || effort == "disabled") {
 			thinking = effort
@@ -33,12 +51,12 @@ func Reasoning(req *format.CoreRequest, defaultThinking string) (thinking, effor
 			thinking = defaultThinking
 		}
 		if thinking != "adaptive" && thinking != "disabled" {
-			return "", "", fmt.Errorf("MiniMax-M3 thinking type must be adaptive or disabled")
+			return "", "", invalidControl("MiniMax-M3 thinking type must be adaptive or disabled")
 		}
 		return thinking, "", nil
 	}
 	if thinking != "" && thinking != "adaptive" {
-		return "", "", fmt.Errorf("MiniMax-M3.1-Flash requires adaptive thinking")
+		return "", "", invalidControl("MiniMax-M3.1-Flash requires adaptive thinking")
 	}
 	if effort == "" {
 		effort = "max"
@@ -47,6 +65,6 @@ func Reasoning(req *format.CoreRequest, defaultThinking string) (thinking, effor
 	case "low", "medium", "high", "xhigh", "max":
 		return "adaptive", effort, nil
 	default:
-		return "", "", fmt.Errorf("unsupported MiniMax-M3.1-Flash reasoning effort %q", effort)
+		return "", "", invalidControl("unsupported MiniMax-M3.1-Flash reasoning effort %q", effort)
 	}
 }

@@ -63,6 +63,9 @@ func TestExampleConfigIncludesMiniMaxFlashFirstRegistry(t *testing.T) {
 			if got := provider.Offers[1].Model; got != "MiniMax-M3" {
 				t.Fatalf("second offer = %q, want MiniMax-M3", got)
 			}
+			if !provider.Offers[0].Pricing.IsZero() {
+				t.Fatal("Flash USD list prices must not enter the CNY billing contract")
+			}
 			if !provider.Offers[1].Pricing.IsZero() {
 				t.Fatal("M3 must not advertise a flat price for tiered billing")
 			}

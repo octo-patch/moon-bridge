@@ -157,7 +157,7 @@ function UsageDashboard({ stats }: { stats: UsageStats }) {
         <UsageMetric icon="north_east" tone="tertiary" value={t("overview.outputValue", { count: formatTokenValue(stats.totals.output_tokens) })} label={t("overview.outputTokens")} />
         <UsageMetric icon="bolt" tone="secondary" value={t("overview.cacheHitValue", { rate: formatPercent(stats.totals.cache_hit_rate) })} label={t("overview.cacheHit")} />
         <UsageMetric icon="sync_alt" tone="secondary" value={t("overview.cacheRatioValue", { ratio: formatRatio(stats.totals.cache_rw_ratio) })} label={t("overview.cacheReadWrite")} />
-        <UsageMetric icon="payments" tone="tertiary" value={t("overview.totalCostValue", { cost: formatCurrency(stats.totals.total_cost) })} label={t("overview.totalCost")} />
+        <UsageMetric icon="payments" tone="tertiary" value={t("overview.totalCostValue", { cost: stats.totals.total_cost == null ? t("common.unknown") : formatCurrency(stats.totals.total_cost) })} label={t("overview.totalCost")} />
       </motion.div>
 
       <div className="usage-chart-grid">
@@ -298,8 +298,8 @@ function UsageModelRow({ row }: { row: UsageStatsModelRow }) {
       <td>{formatTokenValue(row.cache_creation)}</td>
       <td>{formatTokenValue(row.cache_read)}</td>
       <td>{formatPercent(row.cache_hit_rate)}</td>
-      <td>{formatCurrency(row.cost)}</td>
-      <td>{formatCurrency(row.avg_cost_per_mtoken)}{t("overview.costPerMillionSuffix")}</td>
+      <td>{row.cost == null ? t("common.unknown") : formatCurrency(row.cost)}</td>
+      <td>{row.avg_cost_per_mtoken == null ? t("common.unknown") : <>{formatCurrency(row.avg_cost_per_mtoken)}{t("overview.costPerMillionSuffix")}</>}</td>
     </tr>
   );
 }

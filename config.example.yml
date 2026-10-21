@@ -238,9 +238,11 @@ providers:
   # MiniMax global endpoints: https://platform.minimax.io/docs
   # Lower offer priority wins: global Chat, China Chat, then Anthropic.
   # Explicit provider/model references bypass these example priorities.
-  # M3 pricing is intentionally unconfigured: standard rates double above 512k
-  # request input tokens. This flat-price schema cannot represent the tier.
-  # A zero M3 cost in local statistics is not a provider billing estimate.
+  # Pricing fields throughout MoonBridge are CNY per million tokens.
+  # MiniMax pricing is intentionally unconfigured: published Flash rates are
+  # USD, and M3 also changes price above 512k request input tokens. No FX rate
+  # or tier is inferred here. Missing prices mean unknown cost, never free.
+  # Configure verified CNY prices only when they match your billing contract.
   minimax-global-anthropic:
     protocol: "anthropic"
     base_url: "https://api.minimax.io/anthropic"
@@ -250,10 +252,6 @@ providers:
     offers:
       - model: MiniMax-M3.1-Flash
         priority: 20
-        pricing:
-          input_price: 0.15
-          output_price: 0.6
-          cache_read_price: 0.015
       - model: MiniMax-M3
         priority: 20
 
@@ -265,10 +263,6 @@ providers:
     offers:
       - model: MiniMax-M3.1-Flash
         priority: 0
-        pricing:
-          input_price: 0.15
-          output_price: 0.6
-          cache_read_price: 0.015
       - model: MiniMax-M3
         priority: 0
 
@@ -282,10 +276,6 @@ providers:
     offers:
       - model: MiniMax-M3.1-Flash
         priority: 30
-        pricing:
-          input_price: 0.15
-          output_price: 0.6
-          cache_read_price: 0.015
       - model: MiniMax-M3
         priority: 30
 
@@ -297,10 +287,6 @@ providers:
     offers:
       - model: MiniMax-M3.1-Flash
         priority: 10
-        pricing:
-          input_price: 0.15
-          output_price: 0.6
-          cache_read_price: 0.015
       - model: MiniMax-M3
         priority: 10
 
