@@ -44,6 +44,23 @@ func TestReasoningMapsM3ModesToThinkingType(t *testing.T) {
 	}
 }
 
+func TestReasoningM3IgnoresOrdinaryEffort(t *testing.T) {
+	for _, value := range []string{"low", "medium", "high", "xhigh", "max", "other"} {
+		for _, native := range []bool{false, true} {
+			req := &format.CoreRequest{Model: "MiniMax-M3", Thinking: &format.CoreThinkingConfig{Type: "disabled"}}
+			if native {
+				req.Output = &format.CoreOutputConfig{Effort: value}
+			} else {
+				req.Extensions = map[string]any{"openai": map[string]any{"reasoning": map[string]any{"effort": value}}}
+			}
+			thinking, effort, err := Reasoning(req, "adaptive")
+			if err != nil || thinking != "disabled" || effort != "" {
+				t.Fatalf("effort=%q native=%t: thinking=%q effort=%q err=%v", value, native, thinking, effort, err)
+			}
+		}
+	}
+}
+
 func TestReasoningUsesNativeOutputAndThinkingControls(t *testing.T) {
 	req := &format.CoreRequest{
 		Model:    "MiniMax-M3.1-Flash",

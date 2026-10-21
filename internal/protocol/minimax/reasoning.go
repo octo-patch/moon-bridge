@@ -40,10 +40,8 @@ func Reasoning(req *format.CoreRequest, defaultThinking string) (thinking, effor
 		thinking = req.Thinking.Type
 	}
 	if req.Model == "MiniMax-M3" {
-		if effort != "" && effort != "adaptive" && effort != "disabled" {
-			return "", "", invalidControl("MiniMax-M3 accepts thinking type adaptive or disabled, not reasoning effort %q", effort)
-		}
-		// Accept previously advertised presets without sending them as effort.
+		// M3 ignores ordinary effort values. Accept previously advertised mode
+		// presets for compatibility, but never send an effort upstream.
 		if thinking == "" && (effort == "adaptive" || effort == "disabled") {
 			thinking = effort
 		}

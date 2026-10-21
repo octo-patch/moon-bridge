@@ -255,17 +255,19 @@ function UsageBarChart({
 }: {
   ariaLabel: string;
   title: string;
-  segments: Array<{ label: string; value: number; className: string }>;
+  segments: Array<{ label: string; value: number | null; className: string }>;
 }) {
-  const total = segments.reduce((sum, segment) => sum + Math.max(0, segment.value), 0);
+  const { t } = useI18n();
+  const hasUnknown = segments.some((segment) => segment.value == null);
+  const total = segments.reduce((sum, segment) => segment.value == null ? sum : sum + Math.max(0, segment.value), 0);
   return (
     <section className="usage-chart" role="img" aria-label={ariaLabel} tabIndex={0}>
       <div className="usage-chart__header">
         <h3>{title}</h3>
-        <span>{formatNumber(total)}</span>
+        <span>{hasUnknown ? t("common.unknown") : formatNumber(total)}</span>
       </div>
       <div className="usage-chart__bar" aria-hidden="true">
-        {segments.map((segment) => (
+        {segments.map((segment) => segment.value == null ? null : (
           <span
             className={`usage-chart__segment ${segment.className}`}
             key={segment.label}
@@ -278,7 +280,7 @@ function UsageBarChart({
           <li key={segment.label}>
             <span className={`usage-chart__dot ${segment.className}`} aria-hidden="true" />
             <span>{segment.label}</span>
-            <strong>{formatNumber(segment.value)}</strong>
+            <strong>{segment.value == null ? t("common.unknown") : formatNumber(segment.value)}</strong>
           </li>
         ))}
       </ul>
@@ -381,12 +383,12 @@ function formatCurrency(value: number) {
 function chartAriaLabel(
   t: (key: MessageKey, values?: Record<string, string | number>) => string,
   title: string,
-  values: Array<[string, number]>,
+  values: Array<[string, number | null]>,
   emptySummary: string
 ) {
   const summary = values.length > 0
     ? values
-      .map(([label, value]) => t("overview.chartAriaItem", { label, value: formatNumber(value) }))
+      .map(([label, value]) => t("overview.chartAriaItem", { label, value: value == null ? t("common.unknown") : formatNumber(value) }))
       .join(t("overview.chartAriaSeparator"))
     : emptySummary;
   return t("overview.chartAriaLabel", { title, summary });

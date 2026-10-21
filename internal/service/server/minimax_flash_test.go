@@ -44,7 +44,8 @@ func TestMiniMaxFlashConfiguredHTTPAndSSE(t *testing.T) {
 			{"invalid-flash-thinking", "minimax", `"type":"disabled"`, "", "", "", ""},
 			{"invalid-anthropic-effort", "minimax-global-anthropic/MiniMax-M3.1-Flash", `"effort":"invalid"`, "", "", "", ""},
 			{"invalid-m3-thinking", "MiniMax-M3", `"type":"enabled"`, "", "", "", ""},
-			{"invalid-m3-effort", "MiniMax-M3", `"effort":"high"`, "", "", "", ""},
+			{"m3-ignores-effort-chat", "MiniMax-M3", `"effort":"high"`, "minimax-global-openai", "MiniMax-M3", "", "adaptive"},
+			{"m3-ignores-effort-anthropic", "minimax-global-anthropic/MiniMax-M3", `"effort":"high","type":"disabled"`, "minimax-global-anthropic", "MiniMax-M3", "", "disabled"},
 			{"invalid-numeric-effort", "minimax", `"effort":42`, "", "", "", ""},
 			{"invalid-numeric-type", "minimax-global-anthropic/MiniMax-M3", `"type":42`, "", "", "", ""},
 		} {
