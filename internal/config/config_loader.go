@@ -118,7 +118,6 @@ type ModelDefFileConfig struct {
 	SupportsReasoning           *bool                            `yaml:"supports_reasoning,omitempty" json:"supports_reasoning,omitempty"`
 	DefaultReasoningLevel       string                           `yaml:"default_reasoning_level,omitempty" json:"default_reasoning_level,omitempty"`
 	SupportedReasoningLevels    []ReasoningLevelPresetFileConfig `yaml:"supported_reasoning_levels,omitempty" json:"supported_reasoning_levels,omitempty"`
-	SupportedThinkingTypes      []string                         `yaml:"supported_thinking_types,omitempty" json:"supported_thinking_types,omitempty"`
 	SupportsReasoningSummaries  *bool                            `yaml:"supports_reasoning_summaries,omitempty" json:"supports_reasoning_summaries,omitempty"`
 	DefaultReasoningSummary     string                           `yaml:"default_reasoning_summary,omitempty" json:"default_reasoning_summary,omitempty"`
 	InputModalities             []string                         `yaml:"input_modalities,omitempty" json:"input_modalities,omitempty"`
