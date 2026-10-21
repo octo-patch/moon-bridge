@@ -98,9 +98,10 @@ func TestMiniMaxModelMetadata(t *testing.T) {
 		contextWindow int
 		modalities    []string
 		reasoning     []string
+		thinking      []string
 	}{
-		{"MiniMax-M3.1-Flash", 1000000, []string{"text", "image", "video"}, []string{"low", "medium", "high", "xhigh", "max"}},
-		{"MiniMax-M3", 1000000, []string{"text", "image", "video"}, []string{}},
+		{"MiniMax-M3.1-Flash", 1000000, []string{"text", "image", "video"}, []string{"low", "medium", "high", "xhigh", "max"}, []string{"adaptive"}},
+		{"MiniMax-M3", 1000000, []string{"text", "image", "video"}, []string{}, []string{"adaptive", "disabled"}},
 	}
 
 	for _, tt := range tests {
@@ -125,6 +126,9 @@ func TestMiniMaxModelMetadata(t *testing.T) {
 			}
 			if !reflect.DeepEqual(gotReasoning, tt.reasoning) {
 				t.Fatalf("supported reasoning levels = %v, want %v", gotReasoning, tt.reasoning)
+			}
+			if !reflect.DeepEqual(metadata.SupportedThinkingTypes, tt.thinking) {
+				t.Fatalf("supported thinking types = %v, want %v", metadata.SupportedThinkingTypes, tt.thinking)
 			}
 			if !reflect.DeepEqual(metadata.InputModalities, tt.modalities) {
 				t.Fatalf("input modalities = %v, want %v", metadata.InputModalities, tt.modalities)
