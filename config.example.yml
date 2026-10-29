@@ -161,7 +161,7 @@ models:
   MiniMax-M3:
     extensions: {}   # no overrides, metadata only
 
-  MiniMax-M2.7:
+  MiniMax-M3.1-Flash:
     extensions: {}   # no overrides, metadata only
 
   # kimi-for-coding:
@@ -248,12 +248,9 @@ providers:
           input_price: 0.6
           output_price: 2.4
           cache_read_price: 0.12
-      - model: MiniMax-M2.7
-        pricing:
-          input_price: 0.3
-          output_price: 1.2
-          cache_write_price: 0.375
-          cache_read_price: 0.06
+        overrides:
+          default_reasoning_level: disabled
+      - model: MiniMax-M3.1-Flash
 
   minimax-global-openai:
     protocol: "openai-chat"
@@ -266,12 +263,9 @@ providers:
           input_price: 0.6
           output_price: 2.4
           cache_read_price: 0.12
-      - model: MiniMax-M2.7
-        pricing:
-          input_price: 0.3
-          output_price: 1.2
-          cache_write_price: 0.375
-          cache_read_price: 0.06
+        overrides:
+          default_reasoning_level: adaptive
+      - model: MiniMax-M3.1-Flash
 
   # MiniMax China endpoints: https://platform.minimaxi.com/docs
   minimax-cn-anthropic:
@@ -286,12 +280,9 @@ providers:
           input_price: 0.6
           output_price: 2.4
           cache_read_price: 0.12
-      - model: MiniMax-M2.7
-        pricing:
-          input_price: 0.3
-          output_price: 1.2
-          cache_write_price: 0.375
-          cache_read_price: 0.06
+        overrides:
+          default_reasoning_level: disabled
+      - model: MiniMax-M3.1-Flash
 
   minimax-cn-openai:
     protocol: "openai-chat"
@@ -304,12 +295,9 @@ providers:
           input_price: 0.6
           output_price: 2.4
           cache_read_price: 0.12
-      - model: MiniMax-M2.7
-        pricing:
-          input_price: 0.3
-          output_price: 1.2
-          cache_write_price: 0.375
-          cache_read_price: 0.06
+        overrides:
+          default_reasoning_level: adaptive
+      - model: MiniMax-M3.1-Flash
 
   # Google Gemini (Vertex AI via GenAI SDK)
   # gemini:

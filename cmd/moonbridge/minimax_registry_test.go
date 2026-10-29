@@ -22,7 +22,7 @@ func TestExampleConfigIncludesMiniMaxRegistry(t *testing.T) {
 	if err := yaml.Unmarshal(example, &fileConfig); err != nil {
 		t.Fatalf("decode example config: %v", err)
 	}
-	for _, modelID := range []string{"MiniMax-M3", "MiniMax-M2.7"} {
+	for _, modelID := range []string{"MiniMax-M3", "MiniMax-M3.1-Flash"} {
 		if _, ok := fileConfig.Models[modelID]; !ok {
 			t.Fatalf("model %q is missing", modelID)
 		}
@@ -50,7 +50,7 @@ func TestExampleConfigIncludesMiniMaxRegistry(t *testing.T) {
 			if provider.BaseURL != tt.baseURL {
 				t.Fatalf("base URL = %q, want %q", provider.BaseURL, tt.baseURL)
 			}
-			assertMiniMaxOffers(t, provider.Offers)
+			assertMiniMaxOffers(t, provider.Protocol, provider.Offers)
 		})
 	}
 
@@ -69,10 +69,11 @@ func TestMiniMaxModelMetadata(t *testing.T) {
 		modelID       string
 		contextWindow int
 		modalities    []string
+		defaultLevel  string
 		reasoning     []string
 	}{
-		{"MiniMax-M3", 1000000, []string{"text", "image", "video"}, []string{"adaptive", "disabled"}},
-		{"MiniMax-M2.7", 204800, []string{"text"}, []string{"always_on"}},
+		{"MiniMax-M3", 1000000, []string{"text", "image", "video"}, "adaptive", []string{"adaptive", "disabled"}},
+		{"MiniMax-M3.1-Flash", 1000000, []string{"text", "image", "video"}, "max", []string{"low", "medium", "high", "xhigh", "max"}},
 	}
 
 	for _, tt := range tests {
@@ -92,6 +93,9 @@ func TestMiniMaxModelMetadata(t *testing.T) {
 			if metadata.SupportsReasoning == nil || !*metadata.SupportsReasoning {
 				t.Fatal("supports_reasoning = false, want true")
 			}
+			if metadata.DefaultReasoningLevel != tt.defaultLevel {
+				t.Fatalf("default reasoning level = %q, want %q", metadata.DefaultReasoningLevel, tt.defaultLevel)
+			}
 			gotReasoning := make([]string, 0, len(metadata.SupportedReasoningLevels))
 			for _, level := range metadata.SupportedReasoningLevels {
 				gotReasoning = append(gotReasoning, level.Effort)
@@ -106,7 +110,7 @@ func TestMiniMaxModelMetadata(t *testing.T) {
 	}
 }
 
-func assertMiniMaxOffers(t *testing.T, offers []config.OfferFileConfig) {
+func assertMiniMaxOffers(t *testing.T, protocol string, offers []config.OfferFileConfig) {
 	t.Helper()
 	want := map[string]config.ModelPricingFileConfig{
 		"MiniMax-M3": {
@@ -114,12 +118,7 @@ func assertMiniMaxOffers(t *testing.T, offers []config.OfferFileConfig) {
 			OutputPrice:    2.4,
 			CacheReadPrice: 0.12,
 		},
-		"MiniMax-M2.7": {
-			InputPrice:      0.3,
-			OutputPrice:     1.2,
-			CacheWritePrice: 0.375,
-			CacheReadPrice:  0.06,
-		},
+		"MiniMax-M3.1-Flash": {},
 	}
 	if len(offers) != len(want) {
 		t.Fatalf("offer count = %d, want %d", len(offers), len(want))
@@ -131,6 +130,18 @@ func assertMiniMaxOffers(t *testing.T, offers []config.OfferFileConfig) {
 		}
 		if offer.Pricing != pricing {
 			t.Fatalf("pricing for %q = %+v, want %+v", offer.Model, offer.Pricing, pricing)
+		}
+		if offer.Model == "MiniMax-M3" {
+			if offer.Overrides == nil {
+				t.Fatal("MiniMax-M3 offer is missing protocol-specific reasoning defaults")
+			}
+			wantDefault := "adaptive"
+			if protocol == config.ProtocolAnthropic {
+				wantDefault = "disabled"
+			}
+			if offer.Overrides.DefaultReasoningLevel != wantDefault {
+				t.Fatalf("default reasoning level = %q, want %q", offer.Overrides.DefaultReasoningLevel, wantDefault)
+			}
 		}
 	}
 }
