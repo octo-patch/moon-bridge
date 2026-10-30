@@ -22,7 +22,7 @@ func TestExampleConfigIncludesMiniMaxRegistry(t *testing.T) {
 	if err := yaml.Unmarshal(example, &fileConfig); err != nil {
 		t.Fatalf("decode example config: %v", err)
 	}
-	for _, modelID := range []string{"MiniMax-M3", "MiniMax-M2.7"} {
+	for _, modelID := range []string{"MiniMax-M3", "MiniMax-M3.1-Flash"} {
 		if _, ok := fileConfig.Models[modelID]; !ok {
 			t.Fatalf("model %q is missing", modelID)
 		}
@@ -66,12 +66,14 @@ func TestExampleConfigIncludesMiniMaxRegistry(t *testing.T) {
 
 func TestMiniMaxModelMetadata(t *testing.T) {
 	tests := []struct {
-		modelID       string
-		contextWindow int
-		modalities    []string
+		modelID               string
+		contextWindow         int
+		modalities            []string
+		defaultReasoningLevel string
+		reasoningLevels       []string
 	}{
-		{"MiniMax-M3", 1000000, []string{"text", "image", "video"}},
-		{"MiniMax-M2.7", 204800, []string{"text"}},
+		{"MiniMax-M3", 1000000, []string{"text", "image", "video"}, "", nil},
+		{"MiniMax-M3.1-Flash", 1000000, []string{"text", "image", "video"}, "max", []string{"low", "medium", "high", "xhigh", "max"}},
 	}
 
 	for _, tt := range tests {
@@ -94,6 +96,16 @@ func TestMiniMaxModelMetadata(t *testing.T) {
 			if !slices.Equal(metadata.InputModalities, tt.modalities) {
 				t.Fatalf("input modalities = %v, want %v", metadata.InputModalities, tt.modalities)
 			}
+			if metadata.DefaultReasoningLevel != tt.defaultReasoningLevel {
+				t.Fatalf("default reasoning level = %q, want %q", metadata.DefaultReasoningLevel, tt.defaultReasoningLevel)
+			}
+			levels := make([]string, 0, len(metadata.SupportedReasoningLevels))
+			for _, level := range metadata.SupportedReasoningLevels {
+				levels = append(levels, level.Effort)
+			}
+			if !slices.Equal(levels, tt.reasoningLevels) {
+				t.Fatalf("reasoning levels = %v, want %v", levels, tt.reasoningLevels)
+			}
 		})
 	}
 }
@@ -102,15 +114,14 @@ func assertMiniMaxOffers(t *testing.T, offers []config.OfferFileConfig) {
 	t.Helper()
 	want := map[string]config.ModelPricingFileConfig{
 		"MiniMax-M3": {
-			InputPrice:     0.6,
-			OutputPrice:    2.4,
-			CacheReadPrice: 0.12,
+			InputPrice:     0.3,
+			OutputPrice:    1.2,
+			CacheReadPrice: 0.06,
 		},
-		"MiniMax-M2.7": {
-			InputPrice:      0.3,
-			OutputPrice:     1.2,
-			CacheWritePrice: 0.375,
-			CacheReadPrice:  0.06,
+		"MiniMax-M3.1-Flash": {
+			InputPrice:     0.15,
+			OutputPrice:    0.6,
+			CacheReadPrice: 0.015,
 		},
 	}
 	if len(offers) != len(want) {

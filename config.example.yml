@@ -161,7 +161,7 @@ models:
   MiniMax-M3:
     extensions: {}   # no overrides, metadata only
 
-  MiniMax-M2.7:
+  MiniMax-M3.1-Flash:
     extensions: {}   # no overrides, metadata only
 
   # kimi-for-coding:
@@ -245,15 +245,14 @@ providers:
     offers:
       - model: MiniMax-M3
         pricing:
-          input_price: 0.6
-          output_price: 2.4
-          cache_read_price: 0.12
-      - model: MiniMax-M2.7
-        pricing:
           input_price: 0.3
           output_price: 1.2
-          cache_write_price: 0.375
           cache_read_price: 0.06
+      - model: MiniMax-M3.1-Flash
+        pricing:
+          input_price: 0.15
+          output_price: 0.6
+          cache_read_price: 0.015
 
   minimax-global-openai:
     protocol: "openai-chat"
@@ -263,15 +262,14 @@ providers:
     offers:
       - model: MiniMax-M3
         pricing:
-          input_price: 0.6
-          output_price: 2.4
-          cache_read_price: 0.12
-      - model: MiniMax-M2.7
-        pricing:
           input_price: 0.3
           output_price: 1.2
-          cache_write_price: 0.375
           cache_read_price: 0.06
+      - model: MiniMax-M3.1-Flash
+        pricing:
+          input_price: 0.15
+          output_price: 0.6
+          cache_read_price: 0.015
 
   # MiniMax China endpoints: https://platform.minimaxi.com/docs
   minimax-cn-anthropic:
@@ -283,15 +281,14 @@ providers:
     offers:
       - model: MiniMax-M3
         pricing:
-          input_price: 0.6
-          output_price: 2.4
-          cache_read_price: 0.12
-      - model: MiniMax-M2.7
-        pricing:
           input_price: 0.3
           output_price: 1.2
-          cache_write_price: 0.375
           cache_read_price: 0.06
+      - model: MiniMax-M3.1-Flash
+        pricing:
+          input_price: 0.15
+          output_price: 0.6
+          cache_read_price: 0.015
 
   minimax-cn-openai:
     protocol: "openai-chat"
@@ -301,15 +298,14 @@ providers:
     offers:
       - model: MiniMax-M3
         pricing:
-          input_price: 0.6
-          output_price: 2.4
-          cache_read_price: 0.12
-      - model: MiniMax-M2.7
-        pricing:
           input_price: 0.3
           output_price: 1.2
-          cache_write_price: 0.375
           cache_read_price: 0.06
+      - model: MiniMax-M3.1-Flash
+        pricing:
+          input_price: 0.15
+          output_price: 0.6
+          cache_read_price: 0.015
 
   # Google Gemini (Vertex AI via GenAI SDK)
   # gemini:
